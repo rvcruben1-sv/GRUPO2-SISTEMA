@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EL PODEROSO 2 ✌️</title>
+  <style>
+    :root {
+      --primary: #2d3436;
+      --accent: #636e72;
+      --light: #f1f2f6;
+      --card: #ffffff;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(0,0,0,.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      color: #2d3436;
+      padding-bottom: 40px;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--primary);
+      padding: 18px 20px;
+      text-align: center;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header h1 { color: #fff; font-size: 1.5rem; font-weight: 800; }
+
+    .container { max-width: 540px; margin: 0 auto; padding: 20px 16px; }
+
+    /* FECHA ACTUAL */
+    .date-badge {
+      background: var(--primary);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .date-badge strong { display: block; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; margin-top: 4px; }
+
+    /* SELECTOR DE SOCIO */
+    .selector-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      border: 1px solid #eee;
+    }
+    .btn-select {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-select::after { content: '▼'; font-size: 0.8rem; }
+
+    /* LISTADO DE SOCIOS (OCULTO POR DEFECTO) */
+    .members-list {
+      display: none;
+      background: #fff;
+      border: 1px solid #dfe6e9;
+      border-radius: 10px;
+      margin-top: 10px;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+    .member-item {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+    .member-item:active { background: #f1f2f6; }
+    .member-item small { color: var(--accent); }
+
+    /* TARJETA DE RESULTADO */
+    .result-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      display: none;
+      border: 1px solid #eee;
+    }
+    .result-header {
+      background: #f8f9fa;
+      padding: 25px 18px;
+      text-align: center;
+      border-bottom: 2px solid #eee;
+    }
+    .member-name { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; color: var(--primary); }
+    .member-plate { display: inline-block; background: var(--accent); color: #fff; padding: 4px 12px; border-radius: 6px; margin-top: 8px; font-weight: 700; }
+
+    /* RUTA ASIGNADA */
+    .route-display { padding: 22px 18px; text-align: center; }
+    .route-badge {
+      display: flex; align-items: center; justify-content: center;
+      padding: 25px; border-radius: 12px;
+      font-weight: 900; font-size: 1.8rem; margin: 15px 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    /* CALENDARIO */
+    .cal-toggle-btn {
+      width: 100%; background: #dfe6e9; border: none;
+      padding: 14px; font-weight: 800; border-radius: 10px; cursor: pointer;
+    }
+    .calendar-section { display: none; padding: 18px 5px; }
+    .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px; }
+    .cal-nav button { background: var(--primary); color: #fff; border: none; width: 35px; height: 35px; border-radius: 8px; font-weight: bold; }
+    
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-day-header { font-size: .7rem; font-weight: 800; color: #b2bec3; text-align: center; padding-bottom: 5px; }
+    .cal-day { 
+      min-height: 58px; background: #fff; border: 1px solid #f0f0f0; 
+      border-radius: 4px; padding: 2px; display: flex; flex-direction: column; align-items: center;
+    }
+    .day-num { font-size: .75rem; font-weight: 800; }
+    .day-route { font-size: 0.5rem; font-weight: 900; text-align: center; line-height: 1; word-break: break-all; }
+    
+    /* HOY EN EL CALENDARIO */
+    .cal-day.today-highlight { outline: 3px solid #000; outline-offset: -2px; z-index: 5; }
+
+  </style>
+    <!-- Enlace al manifiesto -->
+  <link rel="manifest" href="manifest.json">
+  <!-- Color de la barra de estado en Android -->
+  <meta name="theme-color" content="#2d3436">
+  <!-- Icono para iPhone (opcional) -->
+  <link rel="apple-touch-icon" href="icono.png">
+
+  <script>
+    // Registro del Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
+</head>
+<body>
+
+<div class="header">
+  <h1>🚐 EL PODEROSO 2 ✌️</h1>
+</div>
+
+<div class="container">
+  
+  <div class="date-badge">
+    📅 FECHA DE HOY: <strong id="todayStr">–</strong>
+  </div>
+
+  <!-- SELECTOR DE NOMBRE SOCIO -->
+  <div class="selector-card">
+    <button class="btn-select" onclick="toggleMemberList()">
+      SELECCIONAR NOMBRE SOCIO
+    </button>
+    <div class="members-list" id="memberList">
+      <!-- Nombres cargados dinámicamente -->
+    </div>
+  </div>
+
+  <!-- RESULTADO DEL SOCIO SELECCIONADO -->
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="member-name" id="rName">–</div>
+      <div class="member-plate" id="rPlate">–</div>
+    </div>
+    
+    <div class="route-display">
+      <p style="font-weight:800; color:var(--accent); font-size:.85rem;">📍 RUTA ASIGNADA PARA HOY: 📍</p>
+      <div id="rTodayRoute"></div>
+
+      <button class="cal-toggle-btn" onclick="toggleCalendar()">📅 VER TODO EL MES</button>
+
+      <div class="calendar-section" id="calendarSection">
+        <div class="cal-nav">
+          <button onclick="changeMonth(-1)">‹</button>
+          <div id="calMonthLabel" style="font-weight:900; text-transform:uppercase;">–</div>
+          <button onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DATA_URL = 'data.json';
+let members = [];
+let currentMember = null;
+let calDate = new Date();
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+async function loadData() {
+  try {
+    const resp = await fetch(DATA_URL);
+    members = await resp.json();
+    // Ordenar nombres alfabéticamente
+    members.sort((a, b) => a.name.localeCompare(b.name));
+    renderMemberList();
+  } catch(e) { console.error("Error al cargar JSON"); }
+}
+
+function initToday() {
+  const now = new Date();
+  const days = ['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO'];
+  document.getElementById('todayStr').textContent = `${days[now.getDay()]} ${now.getDate()} DE ${MONTHS[now.getMonth()].toUpperCase()}`;
+}
+
+function toggleMemberList() {
+  const list = document.getElementById('memberList');
+  list.style.display = (list.style.display === 'block') ? 'none' : 'block';
+}
+
+function renderMemberList() {
+  const list = document.getElementById('memberList');
+  list.innerHTML = '';
+  members.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'member-item';
+    item.innerHTML = `<span>${m.name}</span> <small>${m.plate}</small>`;
+    item.onclick = () => {
+      showMember(m);
+      toggleMemberList();
+    };
+    list.appendChild(item);
+  });
+}
+
+function showMember(member) {
+  currentMember = member;
+  document.getElementById('rName').textContent = member.name;
+  document.getElementById('rPlate').textContent = member.plate;
+  
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const todayData = member.schedule[todayKey];
+  const routeEl = document.getElementById('rTodayRoute');
+
+  if (todayData) {
+    const bg = todayData.color || '#636e72';
+    routeEl.innerHTML = `<div class="route-badge" style="background:${bg}; color:${getContrastYIQ(bg)}">${todayData.route}</div>`;
+  } else {
+    routeEl.innerHTML = `<div style="padding:20px; background:#eee; border-radius:10px; font-weight:bold;">SIN RUTA PROGRAMADA</div>`;
+  }
+  
+  document.getElementById('resultCard').style.display = 'block';
+  renderCalendar();
+}
+
+function renderCalendar() {
+  if (!currentMember) return;
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  const today = new Date();
+  
+  document.getElementById('calMonthLabel').textContent = `${MONTHS[month]} ${year}`;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  ['D','L','M','M','J','V','S'].forEach(d => {
+    const h = document.createElement('div'); h.className='cal-day-header'; h.textContent=d; grid.appendChild(h);
+  });
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    grid.appendChild(Object.assign(document.createElement('div'), {className: 'cal-day empty', style: 'background:#f8f9fa; border:none'}));
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const sched = currentMember.schedule[dateKey];
+    const dayEl = document.createElement('div');
+    dayEl.className = 'cal-day';
+    
+    if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+      dayEl.classList.add('today-highlight');
+    }
+
+    if(sched) {
+      const bgColor = sched.color || '#636e72';
+      dayEl.style.background = bgColor;
+      dayEl.style.color = getContrastYIQ(bgColor);
+      dayEl.innerHTML = `<div class="day-num">${d}</div><div class="day-route">${sched.route}</div>`;
+    } else {
+      dayEl.innerHTML = `<div class="day-num">${d}</div>`;
+    }
+    grid.appendChild(dayEl);
+  }
+}
+
+function changeMonth(dir) {
+  calDate.setMonth(calDate.getMonth() + dir);
+  renderCalendar();
+}
+
+function toggleCalendar() {
+  const sec = document.getElementById('calendarSection');
+  sec.style.display = (sec.style.display === 'block') ? 'none' : 'block';
+}
+
+function getContrastYIQ(hex){
+  hex = hex.replace("#", "");
+  const r = parseInt(hex.substr(0,2),16), g = parseInt(hex.substr(2,2),16), b = parseInt(hex.substr(4,2),16);
+  return ((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white';
+}
+
+document.addEventListener('DOMContentLoaded', () => { initToday(); loadData(); });
+</script>
+</body>
+</html>
