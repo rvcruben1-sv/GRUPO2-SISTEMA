@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EL PODEROSO 2 ✌️</title>
+  <!-- AGREGAR AQUÍ PARA MEJORAR COMPATIBILIDAD MÓVIL -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
     :root {
       --primary: #2d3436;
@@ -20,6 +23,8 @@
       min-height: 100vh;
       color: #2d3436;
       padding-bottom: 40px;
+      /* --- AGREGA ESTA LÍNEA --- */
+      overscroll-behavior-y: none
     }
 
     /* HEADER */
@@ -79,14 +84,18 @@
       margin-top: 10px;
       max-height: 350px;
       overflow-y: auto;
+      /* --- AGREGA ESTAS 2 LÍNEAS --- */
+      overscroll-behavior: contain; 
+      -webkit-overflow-scrolling: touch;
     }
     .member-item {
-      padding: 15px;
+      padding: 18px 15px;
       border-bottom: 1px solid #eee;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
+      touch-action: manipulation; /* Mejora la respuesta al toque */
     }
     .member-item:active { background: #f1f2f6; }
     .member-item small { color: var(--accent); }
@@ -140,21 +149,10 @@
     .cal-day.today-highlight { outline: 3px solid #000; outline-offset: -2px; z-index: 5; }
 
   </style>
-    <!-- Enlace al manifiesto -->
-  <link rel="manifest" href="./manifest.json">
+
   <!-- Color de la barra de estado en Android -->
   <meta name="theme-color" content="#2d3436">
-  <!-- Icono para iPhone (opcional) -->
-  <link rel="apple-touch-icon" href="icono.png">
-
-  <script>
-    // Registro del Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
-      });
-    }
-  </script>
+  
 </head>
 <body>
 
