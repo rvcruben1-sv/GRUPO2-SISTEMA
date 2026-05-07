@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EL PODEROSO 2 ✌️</title>
-  <!-- AGREGAR AQUÍ PARA MEJORAR COMPATIBILIDAD MÓVIL -->
   <meta name="format-detection" content="telephone=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
@@ -22,8 +21,7 @@
       background: #f8f9fa;
       min-height: 100vh;
       color: #2d3436;
-      padding-bottom: 40px;
-      /* --- AGREGA ESTA LÍNEA --- */
+      padding-bottom: 80px; /* Más espacio para que el botón no tape contenido */
       overscroll-behavior-y: none
     }
 
@@ -75,7 +73,7 @@
     }
     .btn-select::after { content: '▼'; font-size: 0.8rem; }
 
-    /* LISTADO DE SOCIOS (OCULTO POR DEFECTO) */
+    /* LISTADO DE SOCIOS */
     .members-list {
       display: none;
       background: #fff;
@@ -84,7 +82,6 @@
       margin-top: 10px;
       max-height: 350px;
       overflow-y: auto;
-      /* --- AGREGA ESTAS 2 LÍNEAS --- */
       overscroll-behavior: contain; 
       -webkit-overflow-scrolling: touch;
     }
@@ -95,7 +92,7 @@
       cursor: pointer;
       display: flex;
       justify-content: space-between;
-      touch-action: manipulation; /* Mejora la respuesta al toque */
+      touch-action: manipulation;
     }
     .member-item:active { background: #f1f2f6; }
     .member-item small { color: var(--accent); }
@@ -144,13 +141,10 @@
     }
     .day-num { font-size: .75rem; font-weight: 800; }
     .day-route { font-size: 0.5rem; font-weight: 900; text-align: center; line-height: 1; word-break: break-all; }
-    
-    /* HOY EN EL CALENDARIO */
     .cal-day.today-highlight { outline: 3px solid #000; outline-offset: -2px; z-index: 5; }
 
   </style>
 
-  <!-- Color de la barra de estado en Android -->
   <meta name="theme-color" content="#2d3436">
   
 </head>
@@ -166,17 +160,13 @@
     📅 FECHA DE HOY: <strong id="todayStr">–</strong>
   </div>
 
-  <!-- SELECTOR DE NOMBRE SOCIO -->
   <div class="selector-card">
     <button class="btn-select" onclick="toggleMemberList()">
       SELECCIONAR NOMBRE SOCIO
     </button>
-    <div class="members-list" id="memberList">
-      <!-- Nombres cargados dinámicamente -->
-    </div>
+    <div class="members-list" id="memberList"></div>
   </div>
 
-  <!-- RESULTADO DEL SOCIO SELECCIONADO -->
   <div class="result-card" id="resultCard">
     <div class="result-header">
       <div class="member-name" id="rName">–</div>
@@ -213,7 +203,6 @@ async function loadData() {
   try {
     const resp = await fetch(DATA_URL);
     members = await resp.json();
-    // Ordenar nombres alfabéticamente
     members.sort((a, b) => a.name.localeCompare(b.name));
     renderMemberList();
   } catch(e) { console.error("Error al cargar JSON"); }
@@ -325,9 +314,25 @@ function getContrastYIQ(hex){
   return ((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white';
 }
 
+// FUNCIÓN DEL BOTÓN ACTUALIZAR
+function actualizarApp() {
+    const btn = document.getElementById('btnActualizar');
+    const texto = document.getElementById('textoBtn');
+    
+    btn.style.backgroundColor = "#28a745"; // Cambia a verde
+    btn.style.transform = "scale(0.95)";
+    texto.innerText = "Actualizando...";
+    
+    setTimeout(function() {
+        const nuevaURL = window.location.href.split('?')[0] + '?v=' + new Date().getTime();
+        window.location.href = nuevaURL;
+    }, 600); 
+}
+
 document.addEventListener('DOMContentLoaded', () => { initToday(); loadData(); });
 </script>
-<button onclick="location.reload(true)" style="
+
+<button id="btnActualizar" onclick="actualizarApp()" style="
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -335,12 +340,18 @@ document.addEventListener('DOMContentLoaded', () => { initToday(); loadData(); }
     color: white;
     border: none;
     border-radius: 50px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     font-size: 14px;
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+    font-weight: bold;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
     z-index: 9999;
-    cursor: pointer;">
-    🔄 Actualizar Rutas
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;">
+    <span>🔄</span> <span id="textoBtn">Actualizar Rutas</span>
 </button>
+
 </body>
 </html>
