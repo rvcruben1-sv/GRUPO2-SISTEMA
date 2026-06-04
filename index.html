@@ -24,8 +24,7 @@
       color: #2d3436;
       display: flex;
       flex-direction: column;
-      /* Espacio extra abajo para que el botón no estorbe al final */
-      padding-bottom: 10px; 
+      padding-bottom: 220px; 
       overscroll-behavior-y: none
     }
 
@@ -128,12 +127,16 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
-    /* CALENDARIO */
-    .cal-toggle-btn {
-      width: 100%; background: #dfe6e9; border: none;
+    /* BOTONES DE SECCIÓN TRABAJO */
+    .cal-toggle-btn, .sign-toggle-btn {
+      width: 100%; border: none;
       padding: 14px; font-weight: 800; border-radius: 10px; cursor: pointer;
+      margin-bottom: 10px; font-size: 0.95rem;
     }
-    .calendar-section { display: none; padding: 18px 5px; }
+    .cal-toggle-btn { background: #dfe6e9; color: #2d3436; }
+    .sign-toggle-btn { background: #fdcb6e; color: #2d3436; }
+    
+    .calendar-section, .signs-section { display: none; padding: 18px 5px; }
     .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px; }
     .cal-nav button { background: var(--primary); color: #fff; border: none; width: 35px; height: 35px; border-radius: 8px; font-weight: bold; }
     
@@ -146,6 +149,65 @@
     .day-num { font-size: .75rem; font-weight: 800; }
     .day-route { font-size: 0.5rem; font-weight: 900; text-align: center; line-height: 1; word-break: break-all; }
     .cal-day.today-highlight { outline: 3px solid #000; outline-offset: -2px; z-index: 5; }
+
+    /* REJILLA DE LETREROS EN 3 COLUMNAS */
+    .signs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .sign-btn {
+      background: #ffffff;
+      border: 2px solid #dfe6e9;
+      border-radius: 8px;
+      padding: 10px 4px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: #2d3436;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      word-break: break-word;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+    }
+    .sign-btn:active {
+      background: #f1f2f6;
+      transform: scale(0.95);
+    }
+
+    /* CAPA MODAL FLOTANTE PARA VER LA IMAGEN GRANDE */
+    .image-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .image-modal img {
+      max-width: 100%;
+      max-height: 75vh;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      object-fit: contain;
+    }
+    .modal-close-btn {
+      margin-top: 20px;
+      background: #ff7675;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
     /* FOOTER ESTILO GITHUB */
     .footer {
@@ -161,15 +223,6 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-    }
-    .footer-brand {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: #24292f;
-      font-size: 0.9rem;
-      font-weight: 600;
     }
     .footer-links {
       display: flex;
@@ -188,10 +241,10 @@
       line-height: 1.5;
     }
 
-    /* BOTÓN ACTUALIZAR AJUSTADO (MÁS ARRIBA) */
+    /* BOTÓN ACTUALIZAR AJUSTADO */
     #btnActualizar {
       position: fixed;
-      bottom: 130px; /* Se subió de 20px a 110px para que no tape el footer */
+      bottom: 30px; 
       right: 20px;
       background-color: #007bff;
       color: white;
@@ -212,7 +265,6 @@
       transform: scale(0.9);
     }
   </style>
-
   <meta name="theme-color" content="#2d3436">
 </head>
 <body>
@@ -253,8 +305,20 @@
         </div>
         <div class="cal-grid" id="calGrid"></div>
       </div>
+
+      <button class="sign-toggle-btn" onclick="toggleSignsSection()">🪧 VER LETREROS DE RUTAS</button>
+
+      <div class="signs-section" id="signsSection">
+        <div class="signs-grid" id="signsGrid"></div>
+      </div>
+
     </div>
   </div>
+</div>
+
+<div class="image-modal" id="imageModal">
+  <img id="modalImg" src="" alt="Letrero Ampliado">
+  <button class="modal-close-btn" onclick="closeModal()">❌ CERRAR LETRERO</button>
 </div>
 
 <footer class="footer">
@@ -281,12 +345,52 @@ let currentMember = null;
 let calDate = new Date();
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
+// MAPEO EXACTO: 'texto' es lo que ve el usuario, 'archivo' es tu imagen real .jpg en la carpeta
+const MAPA_LETREROS = [
+  { texto: "6 DE AGOSTO", archivo: "6_de_agosto" },
+  { texto: "232", archivo: "232" },
+  { texto: "ABRA SACABA", archivo: "abra_sacaba" },
+  { texto: "ALTO OBRAJES 212", archivo: "alto_obrajes212" },
+  { texto: "ALTO OBRAJES 244", archivo: "alto_obrajes244" },
+  { texto: "ALTO PARAISO", archivo: "alto_paraiso" },
+  { texto: "AMANCAYAS", archivo: "amancayas" },
+  { texto: "AURORA", archivo: "aurora" },
+  { texto: "BELLA VISTA", archivo: "bella_vista" },
+  { texto: "CANALPATA", archivo: "canalpata" },
+  { texto: "CHURITIA", archivo: "churitia" },
+  { texto: "CIRCUNVALACION", archivo: "circunvalacion" },
+  { texto: "CIRCUNVALACION 220", archivo: "circunvalacion220" },
+  { texto: "COLOMBIA 212", archivo: "colombia212" },
+  { texto: "COLOMBIA 244", archivo: "colombia244" },
+  { texto: "CORRALONES", archivo: "corralones" },
+  { texto: "ESMERALDA", archivo: "esmeralda" },
+  { texto: "FABRIL HUAYLLANI", archivo: "fabril_huallani" },
+  { texto: "ISPIRU", archivo: "ispiru" },
+  { texto: "KORIHUMA 2", archivo: "korihuma2" },
+  { texto: "L.L. 212", archivo: "L.L.212" },
+  { texto: "L.L. ALTA", archivo: "L.L.alta" },
+  { texto: "L.L. BAJA", archivo: "L.L.baja" },
+  { texto: "MADERERO", archivo: "maderero" },
+  { texto: "PUEBLITO", archivo: "pueblito" },
+  { texto: "TACOPOCA", archivo: "tacopoca" },
+  { texto: "TUNEL 212", archivo: "tunel212" },
+  { texto: "TUNEL 220", archivo: "tunel220" },
+  { texto: "TUNEL 244", archivo: "tunel244" },
+  { texto: "TUSCA ALTO", archivo: "tusca_alto" },
+  { texto: "V. ANIMAS", archivo: "v.animas" },
+  { texto: "V.O. 212", archivo: "v.o.212" },
+  { texto: "V.O. 220", archivo: "v.o.220" },
+  { texto: "V.O. 244", archivo: "v.o.244" },
+  { texto: "VALLE PARAISO", archivo: "valle_paraiso" }
+];
+
 async function loadData() {
   try {
     const resp = await fetch(DATA_URL);
     members = await resp.json();
     members.sort((a, b) => a.name.localeCompare(b.name));
     renderMemberList();
+    generateSignsButtons(); 
   } catch(e) { console.error("Error al cargar JSON"); }
 }
 
@@ -388,6 +492,37 @@ function changeMonth(dir) {
 function toggleCalendar() {
   const sec = document.getElementById('calendarSection');
   sec.style.display = (sec.style.display === 'block') ? 'none' : 'block';
+}
+
+function toggleSignsSection() {
+  const sec = document.getElementById('signsSection');
+  sec.style.display = (sec.style.display === 'block') ? 'none' : 'block';
+}
+
+function generateSignsButtons() {
+  const grid = document.getElementById('signsGrid');
+  grid.innerHTML = '';
+  
+  MAPA_LETREROS.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'sign-btn';
+    btn.textContent = item.texto;
+    btn.onclick = () => openSignImage(item.archivo);
+    grid.appendChild(btn);
+  });
+}
+
+function openSignImage(fileName) {
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImg');
+  
+  // Apunta de manera exacta a tu carpeta letreros/nombre_archivo.jpg
+  modalImg.src = `letreros/${fileName}.jpg`;
+  modal.style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('imageModal').style.display = 'none';
 }
 
 function getContrastYIQ(hex){
